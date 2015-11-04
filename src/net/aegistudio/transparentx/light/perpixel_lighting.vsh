@@ -8,6 +8,7 @@
 
 varying vec4 _viewVector_interpolate;
 varying vec3 _normal_interpolate;
+varying mat3 _normal_matrix;
 
 void main() {
 	// Normal positional and color processing.
@@ -20,4 +21,5 @@ void main() {
 	
 	// Transform normal vector for calculation.
 	_normal_interpolate = gl_NormalMatrix * gl_Normal;
+	_normal_matrix = gl_NormalMatrix;
 }

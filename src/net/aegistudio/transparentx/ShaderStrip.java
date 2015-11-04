@@ -105,6 +105,11 @@ public class ShaderStrip {
 		Map<Double, ShaderEffect> replacement = new HashMap<Double, ShaderEffect>();
 		Map<Double, ShaderEnable> replacementEnable = new HashMap<Double, ShaderEnable>();
 		
+		boolean newlyAdded = false;
+		for(ShaderEffect sfx : effects.values()) 
+			if(sfxProgram.adapt(sfx)) newlyAdded = true;
+		if(newlyAdded) sfxProgram.recompile();
+		
 		for(Double priority : effects.keySet()) {
 			ShaderEffect sfx = effects.get(priority);
 			ShaderEnable sfxEnable = effectEnable.get(priority);

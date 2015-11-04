@@ -67,10 +67,10 @@ public class ShaderEffectProgram extends ShaderProgram {
 	 * @throws Exception if some error encounters.
 	 */
 	
-	public void adapt(ShaderEffect sfx) throws Exception {
+	public boolean adapt(ShaderEffect sfx) throws Exception {
 		String prefix = sfx.getClass().getName().replaceAll("[\\.$]", "_");
 		// If target shader already compiled, do nothing to it.
-		if(adaptedShaders.contains(prefix)) return;
+		if(adaptedShaders.contains(prefix)) return false;
 		
 		//Initialize adaption.
 		ShaderEffectClass fxClass = sfx.getShaderEffectClass();
@@ -218,10 +218,11 @@ public class ShaderEffectProgram extends ShaderProgram {
 			this.alteringVariable.addAll(alteringVariables.get(shaderType));
 		}
 		
-		recompile(shaderObjects);
+		incrementAttach(shaderObjects);
+		return true;
 	}
 	
-	protected void recompile(List<ShaderObject> newObjects) throws ShaderException {
+	protected void incrementAttach(List<ShaderObject> newObjects) throws ShaderException {
 		/** detach gross objects **/
 		for(ShaderObject shaderObject : grossObject.values()) 
 			if(shaderObject != null) {
@@ -232,11 +233,12 @@ public class ShaderEffectProgram extends ShaderProgram {
 		
 		for(ShaderObject newObject : newObjects) 
 			super.attach(newObject);
-		
+	}
+	
+	public void recompile() throws ShaderException {
 		for(EnumShaderType shaderType : EnumShaderType.values()) {
 			String mainCode = constructMainCode(shaderType);
 			if(mainCode == null) continue;
-
 			ShaderObject mainObject = new ShaderObject(shaderType, mainCode);
 			mainObject.create();
 			attach(mainObject);

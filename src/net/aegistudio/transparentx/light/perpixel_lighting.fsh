@@ -8,6 +8,7 @@
  
 varying vec4 _viewVector_interpolate;
 varying vec3 _normal_interpolate;
+varying mat3 _normal_matrix;
 
 vec4 _viewVector;
 vec3 _normal;
