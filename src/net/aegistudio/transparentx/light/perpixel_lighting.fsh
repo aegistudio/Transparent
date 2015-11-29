@@ -5,8 +5,9 @@
  * There're some sharing variables here, for
  * the convenience of shading extension.
  */
- 
+
 varying vec4 _viewVector_interpolate;
+varying mat4 _modelview_matrix;
 varying vec3 _normal_interpolate;
 varying mat3 _normal_matrix;
 
@@ -18,6 +19,8 @@ vec4 _diffuse_response;
 vec4 _specular_response;
 vec4 _emission;
 float _shininess;
+
+bool _shadow[gl_MaxLights];
 
 void main() {
 	// Redundant normal processing.
@@ -48,7 +51,9 @@ void main() {
 		// Calculate factor for specular attenuation.
 		float specularFactor = 0.0;
 		
-		if(gl_LightSource[current].position.w == 0.0) {
+		if(_shadow[current])
+			ambients += gl_LightSource[current].ambient;
+		else if(gl_LightSource[current].position.w == 0.0) {
 			// DirectionalLightSource
 			normal_light = max(0.0, dot(_normal, lightVector));
 			normal_halfVector = max(0.0, dot(_normal, vec3(gl_LightSource[current].halfVector)));

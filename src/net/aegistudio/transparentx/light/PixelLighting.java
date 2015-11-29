@@ -43,7 +43,7 @@ public class PixelLighting implements ShaderEffect {
 			return new String[]{perpixel_lighting_fsh.getResource()};
 		else return null;
 	}
-
+	
 	@Override
 	public void setParameters() {	}
 }

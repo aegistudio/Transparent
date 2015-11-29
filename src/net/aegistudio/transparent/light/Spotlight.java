@@ -54,4 +54,8 @@ public class Spotlight implements Effect{
 	public void specular(float r, float g, float b, float a) {
 		lighting.specular(r, g, b, a);
 	}
+	
+	public void attenuation(float k0, float k1, float k2) {
+		lighting.attenuation(k0, k1, k2);
+	}
 }

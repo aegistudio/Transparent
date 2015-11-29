@@ -29,8 +29,9 @@ public class Material implements Effect {
 	public Material() {
 		this.ambient(0.2f, 0.2f, 0.2f, 1.0f);
 		this.diffuse(0.8f, 0.8f, 0.8f, 1.0f);
-		this.specular(1f, 1f, 1f, 1.0f);
-		this.emission(0f, 0f, 0f, 0.0f);
+		this.specular(0f, 0f, 0f, 1.0f);
+		this.emission(0f, 0f, 0f, 1.0f);
+		this.shininess(0f);
 	}
 	
 	@Override
@@ -87,5 +88,6 @@ public class Material implements Effect {
 	
 	public void shininess(float shininess) {
 		this.shininess = shininess;
+		material.markDirty();
 	}
 }

@@ -8,9 +8,9 @@ public enum EnumBlendMethod {
 	ACCUMULATE(GL11.GL_ONE, GL11.GL_ONE, GL14.GL_FUNC_ADD, "%result = %source + %destination"),
 	MODULATE(GL11.GL_SRC_COLOR, GL11.GL_ZERO, GL14.GL_FUNC_ADD, "%result = %source * %destination"),
 	DECALATE(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL14.GL_FUNC_ADD, 
-			"%result = %source * %source.a + %destination * (1.0 - source.a)"),
+			"%result = %source * %source.a + %destination * (1.0 - %source.a)"),
 	REVERSE_DECALATE(GL11.GL_DST_ALPHA, GL11.GL_ONE_MINUS_DST_ALPHA, GL14.GL_FUNC_ADD,
-			"%result = %source * %destination.a * (1.0 - destination.a)");
+			"%result = %source * %destination.a * (1.0 - %destination.a)");
 	
 	private final int sourceFactor;
 	private final int destinationFactor;

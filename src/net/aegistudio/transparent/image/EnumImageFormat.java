@@ -8,11 +8,13 @@ import java.util.TreeMap;
 public enum EnumImageFormat {
 	BYTE3_BGR(BufferedImage.TYPE_3BYTE_BGR) {
 		@Override
-		public void extract(EnumPixelFormat format, Raster raster, int x, int y, ByteBuffer targetBuffer) {
-			format.convert(targetBuffer,
-				raster.getSampleDouble(x, y, 0) / 256.0,
-				raster.getSampleDouble(x, y, 1) / 256.0,
-				raster.getSampleDouble(x, y, 2) / 256.0, 0.0);
+		public void extract(EnumPixelFormat format, Translator translator, Raster raster, int x, int y, ByteBuffer targetBuffer) {
+			translator.translate(raster.getSampleDouble(x, y, 0) / 256.0,
+					raster.getSampleDouble(x, y, 1) / 256.0,
+					raster.getSampleDouble(x, y, 2) / 256.0, 1.0);
+			format.convert(targetBuffer, translator.getRedComponent(),
+					translator.getGreenComponent(), translator.getBlueComponent(),
+					translator.getAlphaComponent());
 		}
 	};
 	
@@ -34,5 +36,5 @@ public enum EnumImageFormat {
 		return imageFormatMap.get(formatId);
 	}
 	
-	public abstract void extract(EnumPixelFormat format, Raster raster, int x, int y, ByteBuffer byteBuffer);
+	public abstract void extract(EnumPixelFormat format, Translator translator, Raster raster, int x, int y, ByteBuffer byteBuffer);
 }
