@@ -77,10 +77,10 @@ public class ShaderStrip {
 				if(sfxProgram.adapt(sfx)) newlyAdded = true;
 			if(newlyAdded) sfxProgram.recompile();
 		}
-		for(ShaderEnable enable : activeEffectsEnable.values())
-			enable.enable();
-		for(ShaderEffect effect : activeEffects.values()) 
-			effect.setParameters();
+		for(Double priorities : activeEffects.keySet()) {
+			activeEffectsEnable.get(priorities).enable();
+			activeEffects.get(priorities).setParameters();
+		}
 	}
 	// ---------------------------------------------
 	
@@ -132,6 +132,8 @@ public class ShaderStrip {
 		}
 	}
 	
+	private ComplexRender complexRender = new ComplexRender();
+	
 	public void push(Drawable itself) throws Exception {
 		this.localEntryUpdate();
 		this.initShaderEffectProgram();
@@ -156,10 +158,13 @@ public class ShaderStrip {
 		if(normal) {
 			List<ComplexEffect> complexEffects = this.complexEffect.beforeRender();
 			if(complexEffects != null) {
-				ComplexRender complexRender = new ComplexRender(itself);
+				complexRender.setScene(itself);
 				normal = false;
-				for(ComplexEffect complexEffect : complexEffects)
+				for(ComplexEffect complexEffect : complexEffects) {
+					complexRender.resetDefault();
+					complexRender.setCurrentEffect(complexEffect);
 					complexEffect.prerender(complexRender);
+				}
 				normal = true;
 			}
 		}
@@ -170,6 +175,8 @@ public class ShaderStrip {
 		
 		for(Double priority : effects.keySet()) {
 			ShaderEffect sfx = effects.get(priority);
+			if(!normal) if(complexRender.shouldBypass(sfx)) continue;
+			
 			ShaderEnable sfxEnable = effectEnable.get(priority);
 			sfxEnable.enable();
 			sfx.setParameters();
@@ -224,10 +231,13 @@ public class ShaderStrip {
 			if(normal) {
 				List<ComplexEffect> complexEffects = this.complexEffect.beforeRender();
 				if(complexEffects != null) {
-					ComplexRender complexRender = new ComplexRender(itself);
+					complexRender.setScene(itself);
 					normal = false;
-					for(ComplexEffect complexEffect : complexEffects)
+					for(ComplexEffect complexEffect : complexEffects) {
+						complexRender.resetDefault();
+						complexRender.setCurrentEffect(complexEffect);
 						complexEffect.postrender(complexRender);
+					}
 					normal = true;
 				}
 			}

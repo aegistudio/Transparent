@@ -1,5 +1,6 @@
 package net.aegistudio.transparentx;
 
+import java.util.Comparator;
 import java.util.HashMap;
 
 import net.aegistudio.transparent.model.Drawable;
@@ -15,18 +16,41 @@ public class ComplexRender {
 	private static HashMap<Class<? extends ShaderEffectProgram>, ShaderEffectProgram> effectPrograms
 		= new HashMap<Class<? extends ShaderEffectProgram>, ShaderEffectProgram>();
 	
-	private final Drawable scene;
-	
-	ComplexRender(Drawable scene) {
+	Drawable scene;
+	void setScene(Drawable scene) {
 		this.scene = scene;
+	}
+
+	// All will be reset except for scene.
+	void resetDefault() {
+		this.bypass = true;
+		this.classBypass = false;
+		this.comparator = null;
+	}
+	
+	/**
+	 * Effects itself will be disabled.
+	 * Default true.
+	 */
+	boolean bypass;
+	public void setBypass(boolean bypass) {
+		this.bypass = bypass;
 	}
 	
 	/** 
 	 * Effects belongs to the same shader class will 
 	 * be bypassed / not disabled. 
+	 * Default false;
 	 */
+
+	boolean classBypass;
 	public void setClassBypass(boolean classBypass) {
-		
+		this.classBypass = classBypass;
+	}
+	
+	Comparator<ShaderEffect> comparator;
+	public void setBypassComparator(Comparator<ShaderEffect> comparator) {
+		this.comparator = comparator;
 	}
 	
 	/**
@@ -67,5 +91,21 @@ public class ComplexRender {
 			ShaderStrip.sfxProgram = ShaderStrip.defaultProgram;
 			ShaderStrip.reactivate();
 		}
+	}
+	
+	ComplexEffect shaderEffect;
+	void setCurrentEffect(ComplexEffect shaderEffect) {
+		this.shaderEffect = shaderEffect;
+	}
+	
+	boolean shouldBypass(ShaderEffect fx) {
+		if(comparator != null) 
+			return comparator.compare(shaderEffect, fx) == 0;
+		else if(bypass) {
+			if(shaderEffect == fx) return true;
+			else if(shaderEffect.getShaderEffectClass().getClass()
+					== fx.getShaderEffectClass().getClass()) return true;
+		}
+		return false;
 	}
 }
