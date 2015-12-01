@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import net.aegistudio.transparent.model.Drawable;
+import net.aegistudio.transparent.model.ScopeManager;
+
 /**
  * Shader strip is rather an accumulator than
  * an actual shading program. It collects all
@@ -30,12 +33,13 @@ public class ShaderStrip {
 	private static final Map<Double, ShaderEnable> activeEffectsEnable
 		= new HashMap<Double, ShaderEnable>();
 	
-	private static ShaderEffectProgram sfxProgram;
+	static DefaultEffectProgram defaultProgram;
 	
 	private static final Stack<Map<Double, ShaderEffect>> replacementStack
 		= new Stack<Map<Double, ShaderEffect>>();
 	private static final Stack<Map<Double, ShaderEnable>> replacementEnableStack
 		= new Stack<Map<Double, ShaderEnable>>();
+	//------------------------------------------
 	
 	// ------------ LOCAL TABLES ------------
 	private final List<ShaderEffect> addingEffects
@@ -50,15 +54,49 @@ public class ShaderStrip {
 		= new ArrayList<ShaderEffect>();
 	// --------------------------------------
 	
+	// ------------ COMPLEX CONTROLLERS ------------
+	private final ScopeManager<ComplexEffect> complexEffect = new ScopeManager<ComplexEffect>() {
+		@Override
+		protected void doCreate(ComplexEffect t) throws Exception {
+			t.create();
+		}
+
+		@Override
+		protected void doDestroy(ComplexEffect t) throws Exception {
+			t.destroy();
+		}
+	};
+	
+	static boolean normal = true;									// Inside normal process.
+	static ShaderEffectProgram sfxProgram;							// Using program.
+	
+	static void reactivate() throws Exception {
+		if(sfxProgram != defaultProgram) {
+			boolean newlyAdded = false;
+			for(ShaderEffect sfx : activeEffects.values()) 
+				if(sfxProgram.adapt(sfx)) newlyAdded = true;
+			if(newlyAdded) sfxProgram.recompile();
+		}
+		for(ShaderEnable enable : activeEffectsEnable.values())
+			enable.enable();
+		for(ShaderEffect effect : activeEffects.values()) 
+			effect.setParameters();
+	}
+	// ---------------------------------------------
+	
 	public void addEffect(ShaderEffect sfx){
 		synchronized(addingEffects) {
 			addingEffects.add(sfx);
+			if(sfx instanceof ComplexEffect) 
+				complexEffect.add((ComplexEffect) sfx);
 		}
 	}
 	
 	public void removeEffect(ShaderEffect sfx){
 		synchronized(removingEffects) {
 			removingEffects.add(sfx);
+			if(sfx instanceof ComplexEffect) 
+				complexEffect.remove((ComplexEffect) sfx);
 		}
 	}
 	
@@ -87,33 +125,52 @@ public class ShaderStrip {
 	}
 	
 	protected void initShaderEffectProgram() {
-		if(sfxProgram == null) {
-			sfxProgram = new ShaderEffectProgram();
-			sfxProgram.create();
+		if(defaultProgram == null) {
+			defaultProgram = new DefaultEffectProgram();
+			defaultProgram.create();
+			sfxProgram = defaultProgram;
 		}
 	}
 	
-	public void push() throws Exception {
+	public void push(Drawable itself) throws Exception {
 		this.localEntryUpdate();
 		this.initShaderEffectProgram();
 		
-		// Do nothing when effects table is currently empty.
+		// 0. do not do redundant things when null is designated.
+		if(!normal && (sfxProgram == null)) return;
+		
+		// 1. Check given effects, do nothing if effects table is currently empty.
 		if(this.effects.isEmpty()) return;
-		if(activeEffects.isEmpty()) 
-			sfxProgram.pushShaderProgram();
 		
-		Map<Double, ShaderEffect> replacement = new HashMap<Double, ShaderEffect>();
-		Map<Double, ShaderEnable> replacementEnable = new HashMap<Double, ShaderEnable>();
+		// 2. If its the first time to adsorb effects, push the default shader program.
+		if(normal && activeEffects.isEmpty()) 
+				defaultProgram.pushShaderProgram();
 		
+		// 3. Adapt newly assigned shader effects, and recompile shader program.
 		boolean newlyAdded = false;
 		for(ShaderEffect sfx : effects.values()) 
 			if(sfxProgram.adapt(sfx)) newlyAdded = true;
 		if(newlyAdded) sfxProgram.recompile();
 		
+		// 5. Do prerender. (Before parameter setting)
+		if(normal) {
+			List<ComplexEffect> complexEffects = this.complexEffect.beforeRender();
+			if(complexEffects != null) {
+				ComplexRender complexRender = new ComplexRender(itself);
+				normal = false;
+				for(ComplexEffect complexEffect : complexEffects)
+					complexEffect.prerender(complexRender);
+				normal = true;
+			}
+		}
+		
+		// 4. Enable effects and replace conflicted effects.
+		Map<Double, ShaderEffect> replacement = new HashMap<Double, ShaderEffect>();
+		Map<Double, ShaderEnable> replacementEnable = new HashMap<Double, ShaderEnable>();
+		
 		for(Double priority : effects.keySet()) {
 			ShaderEffect sfx = effects.get(priority);
 			ShaderEnable sfxEnable = effectEnable.get(priority);
-			sfxProgram.adapt(sfx);
 			sfxEnable.enable();
 			sfx.setParameters();
 			
@@ -131,16 +188,24 @@ public class ShaderStrip {
 		replacementEnableStack.push(replacementEnable);
 	}
 	
-	public void pop() {
+	public void pop(Drawable itself) throws Exception {
 		this.initShaderEffectProgram();
 		
+		// 0. do not do redundant things when null is designated.
+		if(!normal && (sfxProgram == null)) return;
+		
+		// 1. Check given effects, do nothing if effects table is currently empty.
+		// (Please caution that the local entry is not updated.)
 		if(!this.effects.isEmpty()) {
+			
+			// 2. Disable effects.
 			for(Double priority : effects.keySet()) {
 				effectEnable.get(priority).disable();
 				activeEffects.remove(priority);
 				activeEffectsEnable.remove(priority);
 			}
 	
+			// 3. Recover replaced effects.
 			Map<Double, ShaderEffect> replacement = replacementStack.pop();
 			Map<Double, ShaderEnable> replacementEnable = replacementEnableStack.pop();
 			
@@ -155,10 +220,40 @@ public class ShaderStrip {
 				activeEffectsEnable.put(priority, sfxEnable);
 			}
 			
-			if(activeEffects.isEmpty()) 
-				sfxProgram.popShaderProgram();
+			// 4. Do postrender.
+			if(normal) {
+				List<ComplexEffect> complexEffects = this.complexEffect.beforeRender();
+				if(complexEffects != null) {
+					ComplexRender complexRender = new ComplexRender(itself);
+					normal = false;
+					for(ComplexEffect complexEffect : complexEffects)
+						complexEffect.postrender(complexRender);
+					normal = true;
+				}
+			}
+			
+			// 5. If all effects are popped, disable default process program.
+			if(normal && activeEffects.isEmpty()) 
+				defaultProgram.popShaderProgram();
 		}
 		
 		this.localEntryUpdate();
+	}
+	
+	public void create() {
+		try {
+			this.complexEffect.create();
+		}
+		catch(Exception e) {
+			if(e instanceof RuntimeException) throw (RuntimeException)e;
+		}
+	}
+	
+	public void destroy() {
+		try {
+			this.complexEffect.destroy();
+		} catch (Exception e) {
+			if(e instanceof RuntimeException) throw (RuntimeException)e;
+		}
 	}
 }

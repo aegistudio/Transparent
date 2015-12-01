@@ -23,6 +23,33 @@ public enum EnumPixelFormat implements Constant{
 			targetBuffer.put((byte)((1 << 8) * green));
 			targetBuffer.put((byte)((1 << 8) * blue));
 		}
+	},
+	BYTE4_RGBA(GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, 4) {
+		@Override
+		public void convert(ByteBuffer targetBuffer, double red, double green, double blue, double alpha) {
+			targetBuffer.put((byte)((1 << 8) * red));
+			targetBuffer.put((byte)((1 << 8) * green));
+			targetBuffer.put((byte)((1 << 8) * blue));
+			targetBuffer.put((byte)((1 << 8) * alpha));
+		}
+	},
+	BYTE_GRAYSCALE(GL11.GL_LUMINANCE, GL11.GL_UNSIGNED_BYTE, 1) {
+		@Override
+		public void convert(ByteBuffer targetBuffer, double red, double green, double blue, double alpha) {
+			targetBuffer.put((byte)((1 << 8) * (0.3 * red + 0.3 * green + 0.4 * blue)));
+		}
+	},
+	BYTE_DEPTH(GL11.GL_DEPTH_COMPONENT, GL11.GL_UNSIGNED_BYTE, 1) {
+		@Override
+		public void convert(ByteBuffer targetBuffer, double red, double green, double blue, double alpha) {
+			BYTE_GRAYSCALE.convert(targetBuffer, red, green, blue, alpha);
+		}
+	},
+	BYTE_ALPHAMASK(GL11.GL_ALPHA, GL11.GL_UNSIGNED_BYTE, 1) {
+		@Override
+		public void convert(ByteBuffer targetBuffer, double red, double green, double blue, double alpha) {
+			BYTE_GRAYSCALE.convert(targetBuffer, red, green, blue, alpha);
+		}
 	};
 	
 	public final int glPixelFormatId;

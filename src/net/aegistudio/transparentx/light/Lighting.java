@@ -31,8 +31,8 @@ public class Lighting implements ShaderEffectClass{
 				"_emission = gl_FrontMaterial.emission;").submit();
 		new SharingVariable("_shininess", "float", EnumShaderType.FRAGMENT,
 				"_shininess= gl_FrontMaterial.shininess;").submit();
-		new SharingVariable("_shadow", "bool", EnumShaderType.FRAGMENT,
-				"int _shadowinit; for(_shadowinit=0; _shadowinit < gl_MaxLights; _shadowinit++) _shadow[_shadowinit]=false;").submit();
+		new SharingVariable("_shadow", "float", EnumShaderType.FRAGMENT,
+				"int _shadowinit; for(_shadowinit=0; _shadowinit < gl_MaxLights; _shadowinit++) _shadow[_shadowinit]=1.0;").submit();
 	}
 	
 	/**

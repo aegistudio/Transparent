@@ -1,6 +1,5 @@
 package net.aegistudio.transparentx.map;
 
-import net.aegistudio.transparent.model.Drawable;
 import net.aegistudio.transparent.shader.EnumShaderType;
 import net.aegistudio.transparentx.ShaderEffect;
 import net.aegistudio.transparentx.ShaderEffectClass;
@@ -18,15 +17,7 @@ public abstract class DirectCoordinating implements ShaderEffect {
 	public ShaderEffectClass getShaderEffectClass() {
 		return new TextureCoordinating(textureTarget);
 	}
-
-	@Override
-	public boolean shouldPrerender() {
-		return false;
-	}
-
-	@Override
-	public void doPrerender(Drawable prerendering) {	}
-
+	
 	@Override
 	public String[] getRenderSource(EnumShaderType shaderType) {
 		if(shaderType == EnumShaderType.VERTEX)

@@ -1,14 +1,12 @@
 package net.aegistudio.transparent.shader;
 
-import java.lang.reflect.Method;
-
-import org.lwjgl.opengl.ARBShaderObjects;
-import org.lwjgl.opengl.ARBVertexShader;
+import net.aegistudio.transparent.shader.ShaderDataAction.ControversalDataAction;
+import net.aegistudio.transparent.shader.ShaderDataAction.MatrixDataAction;
 import net.aegistudio.transparent.texture.TextureBinding;
 
 public enum EnumShaderData
 {
-	BOOLEAN(1, "s", short.class, "i", int.class) {
+	BOOLEAN(new ControversalDataAction(1, "s", short.class, "i", int.class)) {
 		public void vertexAttribute(Object... objects) {	
 			Class<?> clazz = objects[1].getClass();
 			if(clazz == boolean.class || clazz == Boolean.class)
@@ -31,22 +29,22 @@ public enum EnumShaderData
 	BVEC4(2, "s", short.class, "i", int.class),
 	**/
 	
-	FLOAT(1, "f", float.class),
-	VEC2(2, "f", float.class),
-	VEC3(3, "f", float.class),
-	VEC4(4, "f", float.class),
+	FLOAT(new ControversalDataAction(1, "f", float.class)),
+	VEC2(new ControversalDataAction(2, "f", float.class)),
+	VEC3(new ControversalDataAction(3, "f", float.class)),
+	VEC4(new ControversalDataAction(4, "f", float.class)),
 	
-	INT(1, "s", short.class, "i", int.class),
-	IVEC2(2, "s", short.class, "i", int.class),
-	IVEC3(3, "s", short.class, "i", int.class),
-	IVEC4(4, "s", short.class, "i", int.class),
+	INT(new ControversalDataAction(1, "s", short.class, "i", int.class)),
+	IVEC2(new ControversalDataAction(2, "s", short.class, "i", int.class)),
+	IVEC3(new ControversalDataAction(3, "s", short.class, "i", int.class)),
+	IVEC4(new ControversalDataAction(4, "s", short.class, "i", int.class)),
 	
-	DOUBLE(1, "d", double.class, "f", float.class),
-	DVEC2(2, "d", double.class, "f", float.class),
-	DVEC3(3, "d", double.class, "f", float.class),
-	DVEC4(4, "d", double.class, "f", float.class),
+	DOUBLE(new ControversalDataAction(1, "d", double.class, "f", float.class)),
+	DVEC2(new ControversalDataAction(2, "d", double.class, "f", float.class)),
+	DVEC3(new ControversalDataAction(3, "d", double.class, "f", float.class)),
+	DVEC4(new ControversalDataAction(4, "d", double.class, "f", float.class)),
 	
-	TEXTURE(1, "s", short.class, "i", int.class){
+	TEXTURE(new ControversalDataAction(1, "s", short.class, "i", int.class)){
 		public void vertexAttribute(Object... objects) {
 			throw new IllegalArgumentException("Texture cannot be assigned for every vertices");
 		}
@@ -57,48 +55,26 @@ public enum EnumShaderData
 						((TextureBinding)objects[1]).getCurrentBinding());
 			else super.uniform(objects);
 		}
-	};
+	},
+	MATRIX2(new MatrixDataAction(2)),
+	MATRIX3(new MatrixDataAction(3)),
+	MATRIX4(new MatrixDataAction(4));
 	
-	private int parameterLength;
+	private final ShaderDataAction shaderDataAction;
 	
-	private EnumShaderData(int size, String attribSuffix, Class<?> vertClazz, String uniformSuffix, Class<?> uniformClazz) throws Error {
-		try {
-			parameterLength = size;
-			Class<?>[] vertexClasses = new Class<?>[size + 1];
-			Class<?>[] uniformClasses = new Class<?>[size + 1];
-			
-			for(int i = 0; i < size; i ++) {
-				vertexClasses[i + 1] = vertClazz;
-				uniformClasses[i + 1] = uniformClazz;
-			}
-			
-			vertexClasses[0] = int.class;
-			uniformClasses[0] = int.class;
-			
-			this.vertexAttributeMethod = ARBVertexShader.class.getMethod(String.format("glVertexAttrib%d%sARB", size, attribSuffix), vertexClasses);
-			this.uniformMethod = ARBShaderObjects.class.getMethod(String.format("glUniform%d%sARB", size, uniformSuffix), uniformClasses);
-		}
-		catch(Exception e) {
-			throw new Error();
-		}
+	private EnumShaderData(ShaderDataAction shaderDataAction) throws Error {
+			this.shaderDataAction = shaderDataAction;
 	}
-	
-	private EnumShaderData(int size, String suffix, Class<?> clazz) throws Error {
-		this(size, suffix, clazz, suffix, clazz);
-	}
-	
-	private final Method vertexAttributeMethod;
-	private final Method uniformMethod;
-	
 	
 	public void vertexAttribute(Object... objects) {
 		try {
+			int parameterLength = this.getParameterLength();
 			if(parameterLength + 1 != objects.length)
 				throw new IllegalArgumentException(
 						String.format("Mismatch between parameter length! Required %d, actually %d",
 								parameterLength + 1, objects.length
 				));
-			this.vertexAttributeMethod.invoke(null, objects);
+			this.shaderDataAction.vertexAttribute(objects);
 		}
 		catch(IllegalArgumentException iae) {
 			throw iae;
@@ -110,12 +86,13 @@ public enum EnumShaderData
 	
 	public void uniform(Object... objects) {
 		try {
+			int parameterLength = this.getParameterLength();
 			if(parameterLength + 1 != objects.length)
 				throw new IllegalArgumentException(
 						String.format("Mismatch between parameter length! Required %d, actually %d",
 								parameterLength + 1, objects.length
 				));
-			this.uniformMethod.invoke(null, objects);
+			this.shaderDataAction.uniform(objects);
 		}
 		catch(IllegalArgumentException iae) {
 			throw iae;
@@ -126,7 +103,7 @@ public enum EnumShaderData
 	}
 	
 	public int getParameterLength() {
-		return this.parameterLength;
+		return this.shaderDataAction.getParameterLength();
 	}
 }
 

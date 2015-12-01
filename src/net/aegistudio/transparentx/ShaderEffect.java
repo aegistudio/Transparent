@@ -1,6 +1,5 @@
 package net.aegistudio.transparentx;
 
-import net.aegistudio.transparent.model.Drawable;
 import net.aegistudio.transparent.shader.EnumShaderType;
 
 /**
@@ -12,11 +11,6 @@ import net.aegistudio.transparent.shader.EnumShaderType;
 
 public interface ShaderEffect {
 	public ShaderEffectClass getShaderEffectClass();
-	
-	public boolean shouldPrerender();
-	
-	public void doPrerender(Drawable prerendering);
-
 	/**
 	 * <b>Caution:</b> the main function should be in the first
 	 * shader source. <br>

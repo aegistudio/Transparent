@@ -1,6 +1,5 @@
 package net.aegistudio.transparentx.map;
 
-import net.aegistudio.transparent.model.Drawable;
 import net.aegistudio.transparent.shader.EnumShaderData;
 import net.aegistudio.transparent.shader.EnumShaderType;
 import net.aegistudio.transparent.shader.VertexAttribute;
@@ -21,14 +20,6 @@ public abstract class VertexAttributeCoordinating implements ShaderEffect {
 	public ShaderEffectClass getShaderEffectClass() {
 		return new TextureCoordinating(textureTarget);
 	}
-
-	@Override
-	public boolean shouldPrerender() {
-		return false;
-	}
-
-	@Override
-	public void doPrerender(Drawable prerendering) {	}
 
 	@Override
 	public String[] getRenderSource(EnumShaderType shaderType) {
