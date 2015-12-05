@@ -119,6 +119,7 @@ public class ShaderSymbolizer {
 						
 						type = null;
 						modifier = null;
+						arrayBuilder = null;
 					}
 					else if(tag == EnumLexicalUnit.OPERATOR || tag == EnumLexicalUnit.SEMICOLON) {
 						if(current.equals("[")) {
@@ -133,6 +134,7 @@ public class ShaderSymbolizer {
 							if(tag == EnumLexicalUnit.SEMICOLON) {
 								type = null;
 								modifier = null;
+								arrayBuilder = null;
 							}
 						}
 					}
@@ -141,6 +143,7 @@ public class ShaderSymbolizer {
 						name = null;
 						arrayBuilder = null;
 						state = AFTER_GLOBAL_TYPE;
+						arrayBuilder = null;
 					}
 				break;
 				

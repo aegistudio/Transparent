@@ -7,6 +7,8 @@ public interface ShaderEffectProgram {
 	
 	public void recompile() throws ShaderException;
 	
+	public void create();
+	
 	public void push();
 	
 	public void pop();

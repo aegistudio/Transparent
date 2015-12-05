@@ -41,9 +41,9 @@ public abstract class TextureBinding implements Effect {
 		if(currentMultiTexture[textureUnit] == null)
 			GL11.glEnable(targetTexture.getTextureType().getValue());
 
-		currentMultiTexture[textureUnit] = targetTexture;
 		multiTextureAllocationList[textureUnit]
 				.push(currentMultiTexture[textureUnit]);
+		currentMultiTexture[textureUnit] = targetTexture;
 	}
 	
 	protected void unbindMultitexture(int textureUnit) {

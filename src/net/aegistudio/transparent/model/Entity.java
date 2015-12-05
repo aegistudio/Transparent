@@ -29,9 +29,9 @@ public class Entity implements Drawable {
 	@Override
 	public void render() throws Exception {
 		this.effectBank.use();
-		this.shaderStrip.push(this);
+		this.shaderStrip.push(this.wrapped);
 		this.wrapped.render();
-		this.shaderStrip.pop(this);
+		this.shaderStrip.pop(this.wrapped);
 		this.effectBank.recover();
 	}
 

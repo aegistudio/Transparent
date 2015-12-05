@@ -15,9 +15,15 @@ import net.aegistudio.transparent.model.Drawable;
 public class ComplexRender {
 	private static HashMap<Class<? extends ShaderEffectProgram>, ShaderEffectProgram> effectPrograms
 		= new HashMap<Class<? extends ShaderEffectProgram>, ShaderEffectProgram>();
+
+	final ShaderStrip shaderStrip;
+	public ComplexRender(ShaderStrip shaderStrip) {
+		this.shaderStrip = shaderStrip;
+	}
 	
 	Drawable scene;
 	void setScene(Drawable scene) {
+		
 		this.scene = scene;
 	}
 
@@ -72,7 +78,7 @@ public class ComplexRender {
 			this.scene.render();
 			ShaderStrip.defaultProgram.push();
 			ShaderStrip.sfxProgram = ShaderStrip.defaultProgram;
-			ShaderStrip.reactivate();
+			shaderStrip.reactivate();
 		}
 		else if(programClass == DefaultEffectProgram.class) {
 			ShaderStrip.sfxProgram = ShaderStrip.defaultProgram;
@@ -82,14 +88,15 @@ public class ComplexRender {
 			ShaderStrip.sfxProgram = effectPrograms.get(programClass);
 			if(ShaderStrip.sfxProgram == null) {
 				ShaderStrip.sfxProgram = programClass.newInstance();
+				ShaderStrip.sfxProgram.create();
 				effectPrograms.put(programClass, ShaderStrip.sfxProgram);
 			}
 			ShaderStrip.sfxProgram.push();
-			ShaderStrip.reactivate();
+			shaderStrip.reactivate();
 			this.scene.render();
 			ShaderStrip.sfxProgram.pop();
 			ShaderStrip.sfxProgram = ShaderStrip.defaultProgram;
-			ShaderStrip.reactivate();
+			shaderStrip.reactivate();
 		}
 	}
 	

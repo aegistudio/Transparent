@@ -70,17 +70,21 @@ public class ShaderStrip {
 	static boolean normal = true;									// Inside normal process.
 	static ShaderEffectProgram sfxProgram;							// Using program.
 	
-	static void reactivate() throws Exception {
+	void reactivate() throws Exception {
 		if(sfxProgram != defaultProgram) {
 			boolean newlyAdded = false;
 			for(ShaderEffect sfx : activeEffects.values()) 
 				if(sfxProgram.adapt(sfx)) newlyAdded = true;
 			if(newlyAdded) sfxProgram.recompile();
 		}
-		for(Double priorities : activeEffects.keySet()) {
-			activeEffectsEnable.get(priorities).enable();
-			activeEffects.get(priorities).setParameters();
-		}
+		if(sfxProgram != null)
+			for(Double priorities : activeEffects.keySet()) {
+				ShaderEffect shaderEffect = activeEffects.get(priorities);
+				if(!normal && (shaderEffect instanceof ComplexEffect)) 
+					if(complexRender.shouldBypass(shaderEffect)) continue;
+				activeEffectsEnable.get(priorities).enable();
+				shaderEffect.setParameters();
+			}
 	}
 	// ---------------------------------------------
 	
@@ -132,7 +136,7 @@ public class ShaderStrip {
 		}
 	}
 	
-	private ComplexRender complexRender = new ComplexRender();
+	private ComplexRender complexRender = new ComplexRender(this);
 	
 	public void push(Drawable itself) throws Exception {
 		this.localEntryUpdate();

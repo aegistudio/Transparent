@@ -14,7 +14,7 @@ public class StackedBinding extends TextureBinding {
 	public void use() {
 		if(targetBinding == -1) {
 			for(int i = maxMultiTextureUnit - 1; i >= 0; i --) 
-				if(currentMultiTexture[i] == null) targetBinding = i;
+				if(currentMultiTexture[i] == null) {targetBinding = i; break;}
 			if(targetBinding == -1) throw new UnallocatableException(this);
 		}
 		else throw new UninitializedException(this);

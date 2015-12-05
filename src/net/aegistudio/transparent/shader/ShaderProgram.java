@@ -93,7 +93,7 @@ public class ShaderProgram {
 		return this.shaderProgramId;
 	}
 	
-	static ShaderProgram getCurrentProgram() {
+	public static ShaderProgram getCurrentProgram() {
 		return currentShaderProgram;
 	}
 	

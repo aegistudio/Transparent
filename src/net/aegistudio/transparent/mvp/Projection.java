@@ -37,6 +37,7 @@ public abstract class Projection implements Effect {
 		GL13.glMultTransposeMatrix(this.viewTransform.rotation);
 		
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glPushMatrix();
 		GL11.glLoadIdentity();
 		projection();
 	}

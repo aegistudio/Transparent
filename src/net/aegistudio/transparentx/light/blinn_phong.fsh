@@ -26,7 +26,8 @@ void main() {
 	// Redundant normal processing.
 	_normal = _normal_interpolate;
 	_viewVector = _viewVector_interpolate;
-	vec3 eyeVector = vec3(_viewVector) / _viewVector.w;
+	vec3 eyeVector = _viewVector.xyz / _viewVector.w;
+	eyeVector.z = -eyeVector.z;
 	
 	_ambient_response = gl_FrontMaterial.ambient;
 	_diffuse_response = gl_FrontMaterial.diffuse;
