@@ -30,13 +30,13 @@ public class Model {
 		
 		for(ArrayPointerEntry ape : bufferRelation)
 			if(ape.arrayPointer == EnumArrayPointer.VERTEX) {
-				if(hasVertex) throw new IllegalArgumentException("Index array is aleady designated!");
+				if(hasVertex) throw new IllegalArgumentException("Vertex array is aleady designated!");
 				hasVertex = true;
 				if(this.ibo == null)
 					this.vertices = ape.vbo.getMaximumElements() / (ape.offset + ape.stride + ape.size);
 			}
 			else if(ape instanceof IndexPointerEntry) {
-				if(this.ibo != null) throw new IllegalArgumentException("Index buffer object is already designated!");
+				if(this.ibo != null) throw new IllegalArgumentException("Index array is already designated!");
 				this.ibo = ape.vbo;
 				this.vertices = ape.vbo.getMaximumElements();
 				switch(ape.vbo.getType()) {

@@ -3,7 +3,7 @@ package net.aegistudio.transparentx.lang;
 import java.util.TreeMap;
 
 public enum EnumKeyword {
-	MODIFIER("uniform", "attribute", "varying", "constant", "in", "out", "inout", "buffer", "shared"),
+	MODIFIER("uniform", "attribute", "varying", "const", "in", "out", "inout", "buffer", "shared"),
 	BUILTIN_VARIABLE(SharingVariable.getBuiltins()),
 	BUILTIN_FUNCTION("ftransform", "sin", "cos", "tan", "exp"),
 	TYPE(	// BASICS

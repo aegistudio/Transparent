@@ -16,6 +16,16 @@ public enum EnumImageFormat {
 					translator.getGreenComponent(), translator.getBlueComponent(),
 					translator.getAlphaComponent());
 		}
+	},
+	BYTE_GRAY(BufferedImage.TYPE_BYTE_GRAY) {
+		@Override
+		public void extract(EnumPixelFormat format, Translator translator, Raster raster, int x, int y, ByteBuffer targetBuffer) {
+			double sample = raster.getSampleDouble(x, y, 0) / 256.0;
+			translator.translate(sample, sample, sample, 1.0);
+			format.convert(targetBuffer, translator.getRedComponent(),
+					translator.getGreenComponent(), translator.getBlueComponent(),
+					translator.getAlphaComponent());
+		}
 	};
 	
 	private static final TreeMap<Integer, EnumImageFormat> imageFormatMap

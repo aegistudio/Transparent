@@ -1,0 +1,33 @@
+varying vec3 normalVector;
+varying vec4 vertexVector;
+
+uniform sampler2D depthMap;
+uniform int detailLevel;
+uniform float windowSize;
+
+void main() {
+	float step = windowSize / float(detailLevel);
+	float depth = (1.0 + vertexVector.z) / 2.0;
+	
+	if(depth - texture2D(depthMap, vertexVector.xy).z < -0.1) return;
+	
+	float accumOcclusion = 0.0;
+	int acceptedFragments = 0;
+	int i, j;
+	
+	for(i = -detailLevel; i <= detailLevel; i ++)
+		for(j = -detailLevel; j <= detailLevel; j ++) {
+			vec2 targetVector = vertexVector.xy + vec2(float(i) * step, float(j) * step);
+			if(targetVector.x > 1.0 || targetVector.x < 0.0 
+				|| targetVector.y > 1.0 || targetVector.y < 0.0) continue;
+			
+			acceptedFragments ++;
+			
+			float lend = dot(normalize(normalVector), normalize(vec3(float(i) * step, float(j) * step,
+				depth - texture2D(depthMap, targetVector).z)));
+			if(lend > 0.0) accumOcclusion += lend;
+		}
+	
+	if(acceptedFragments > 0)
+		gl_FragColor *= (1.0 - (accumOcclusion / float(acceptedFragments)));
+}

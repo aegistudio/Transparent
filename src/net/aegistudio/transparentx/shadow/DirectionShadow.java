@@ -34,7 +34,7 @@ public abstract class DirectionShadow implements ShaderEffect, ComplexEffect {
 		this.binding = new StackedBinding(renderTexture, false);
 		shadowMap.set(binding);
 		
-		java.nio.FloatBuffer coordTransformBuffer = BufferUtils
+		FloatBuffer coordTransformBuffer = BufferUtils
 				.createFloatBuffer(16).put(new float[]{
 				0.5f,	0,		0, 		-0.5f,
 				0,		0.5f,	0, 		-0.5f,
@@ -146,9 +146,9 @@ public abstract class DirectionShadow implements ShaderEffect, ComplexEffect {
 			Matrix.inverse(mvp, inverseMvp);						// Result2 = inverse(MVP)
 	
 			{
-				float[] regularizedLightPos = result3;
-				Matrix.multiply(mvp, lightPos, regularizedLightPos);			
-				Matrix.copy(regularizedLightPos, lightPos);
+			//	float[] regularizedLightPos = result3;
+			//	Matrix.multiply(mvp, lightPos, regularizedLightPos);			
+			//	Matrix.copy(regularizedLightPos, lightPos);
 				Matrix.normalize(lightPos);								// LightPos = LP (World Coordinate)
 				
 				for(int i = 0; i < 4; i ++)
