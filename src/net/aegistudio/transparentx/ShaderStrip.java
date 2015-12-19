@@ -73,8 +73,9 @@ public class ShaderStrip {
 	void reactivate() throws Exception {
 		if(sfxProgram != defaultProgram) {
 			boolean newlyAdded = false;
-			for(ShaderEffect sfx : activeEffects.values()) 
+			for(ShaderEffect sfx : activeEffects.values()) {
 				if(sfxProgram.adapt(sfx)) newlyAdded = true;
+			}
 			if(newlyAdded) sfxProgram.recompile();
 		}
 		if(sfxProgram != null)

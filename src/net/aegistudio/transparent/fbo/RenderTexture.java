@@ -10,25 +10,19 @@ import net.aegistudio.transparent.image.EnumPixelFormat;
 import net.aegistudio.transparent.texture.EnumTexture;
 import net.aegistudio.transparent.texture.Texture;
 
-public class RenderTexture extends Texture {
-	private final FrameBufferObject fbo;
+public class RenderTexture extends Texture implements Renderable {
 	private final int textureWidth, textureHeight;
 	private final EnumPixelFormat pixelFormat;
-	private final FrameBufferAttachment[] attachments;
 	
-	public RenderTexture(int textureWidth, int textureHeight, 
-			EnumPixelFormat internalFormat, FrameBufferAttachment... attachments) {
-		this(EnumTexture.SURFACE, textureWidth, textureHeight, internalFormat, attachments);
+	public RenderTexture(int textureWidth, int textureHeight, EnumPixelFormat internalFormat) {
+		this(EnumTexture.SURFACE, textureWidth, textureHeight, internalFormat);
 	}
 	
-	public RenderTexture(EnumTexture texTarget, int textureWidth, int textureHeight, 
-			EnumPixelFormat internalFormat, FrameBufferAttachment... attachments) {
+	public RenderTexture(EnumTexture texTarget, int textureWidth, int textureHeight, EnumPixelFormat internalFormat) {
 		super(texTarget);
-		this.fbo = new FrameBufferObject();
 		this.textureWidth = textureWidth;
 		this.textureHeight = textureHeight;
 		this.pixelFormat = internalFormat;
-		this.attachments = attachments;
 	}
 
 	@Override
@@ -45,33 +39,26 @@ public class RenderTexture extends Texture {
 					this.textureWidth, this.textureHeight, 0, this.pixelFormat.getPixelFormatTypeValue(),
 					this.pixelFormat.getPixelFormatDataValue(), (ByteBuffer)null);
 			GL11.glBindTexture(textureType.getValue(), previousTexture);
-			
-			this.fbo.create();
-			int fboId = this.fbo.getFrameBufferId();
-			ARBFramebufferObject.glBindFramebuffer(ARBFramebufferObject.GL_FRAMEBUFFER, fboId);
-			for(FrameBufferAttachment attachment : this.attachments) 
-				ARBFramebufferObject.glFramebufferTexture2D(ARBFramebufferObject.GL_FRAMEBUFFER, 
-						attachment.getFrameBufferAttachment(), textureType.getValue(), textureId, mipmapLevel);
-			ARBFramebufferObject.glBindFramebuffer(ARBFramebufferObject.GL_FRAMEBUFFER, 0);
 		}
-	}
-
-	public void destroy() {
-		super.destroy();
-		this.fbo.destroy();
-	}
-	
-	public void push() {
-		this.fbo.push();
-		GL11.glViewport(0, 0, textureWidth, textureHeight);
-	}
-	
-	public void pop() {
-		this.fbo.pop();
 	}
 	
 	@Override
 	protected void subbindTexture() {
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+	}
+
+	@Override
+	public boolean attach(FrameBufferAttachment attachment) {
+		if(textureId == 0) return false;
+		ARBFramebufferObject.glFramebufferTexture2D(ARBFramebufferObject.GL_FRAMEBUFFER, 
+				attachment.getFrameBufferAttachment(), textureType.getValue(), textureId, 0);
+		return true;
+	}
+
+	@Override
+	public boolean detach(FrameBufferAttachment attachment) {
+		ARBFramebufferObject.glFramebufferTexture2D(ARBFramebufferObject.GL_FRAMEBUFFER, 
+				attachment.getFrameBufferAttachment(), textureType.getValue(), 0, 0);
+		return true;
 	}
 }

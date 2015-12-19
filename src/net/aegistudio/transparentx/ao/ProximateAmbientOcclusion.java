@@ -3,6 +3,7 @@ package net.aegistudio.transparentx.ao;
 import org.lwjgl.opengl.GL11;
 
 import net.aegistudio.transparent.fbo.EnumBufferAttachment;
+import net.aegistudio.transparent.fbo.FrameBufferObject;
 import net.aegistudio.transparent.fbo.RenderTexture;
 import net.aegistudio.transparent.image.EnumPixelFormat;
 import net.aegistudio.transparent.shader.EnumShaderData;
@@ -25,9 +26,9 @@ import net.aegistudio.transparentx.ShaderUniform;
 
 public class ProximateAmbientOcclusion implements ShaderEffect, ComplexEffect{
 
-	private int detailLevel;
+	private final int detailLevel;
 	private float windowSize;
-	
+	private FrameBufferObject fbo;
 	private RenderTexture depthMap;
 	
 	/**
@@ -40,25 +41,27 @@ public class ProximateAmbientOcclusion implements ShaderEffect, ComplexEffect{
 		this.detailLevel = detailLevel;
 		this.windowSize = windowSize;
 		
-		this.depthMap = new RenderTexture(EnumTexture.SURFACE, samplePoints, samplePoints, 
-				EnumPixelFormat.BYTE_DEPTH, EnumBufferAttachment.DEPTH);
+		this.depthMap = new RenderTexture(EnumTexture.SURFACE, samplePoints, samplePoints, EnumPixelFormat.BYTE_DEPTH);
+		this.fbo = new FrameBufferObject(0, 0, samplePoints, samplePoints);
 		this.binding = new StackedBinding(depthMap, false);
 	}
 	
 	@Override
 	public void create() {
+		fbo.create();
 		depthMap.create();
+		fbo.attach(EnumBufferAttachment.DEPTH, depthMap);
 	}
 
 	StackedBinding binding;
 
 	@Override
 	public void prerender(ComplexRender controller) throws Exception {
-		depthMap.push();
+		fbo.push();
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
 		controller.self(DefaultEffectProgram.class);
-		depthMap.pop();
+		fbo.pop();
 	
 		binding.use();
 	}
@@ -71,6 +74,7 @@ public class ProximateAmbientOcclusion implements ShaderEffect, ComplexEffect{
 	@Override
 	public void destroy() {
 		depthMap.destroy();
+		fbo.destroy();
 	}
 
 	@Override
@@ -84,20 +88,19 @@ public class ProximateAmbientOcclusion implements ShaderEffect, ComplexEffect{
 	@Override
 	public String[] getRenderSource(EnumShaderType shaderType) {
 		if(shaderType == EnumShaderType.VERTEX) return new String[] {gpao_vsh.getResource()};
-		else if(shaderType == EnumShaderType.FRAGMENT) return new String[] {gpao_fsh.getResource()};
+		else if(shaderType == EnumShaderType.FRAGMENT) return new String[] {
+				gpao_fsh.getResource().replaceAll("%detailLevel", Integer.toString(this.detailLevel))};
 		return null;
 	}
 
 	ShaderUniform depthMapUniform = new ShaderUniform(this, EnumShaderData.TEXTURE, "depthMap");
-	ShaderUniform detailLevelUniform = new ShaderUniform(this, EnumShaderData.INT, "detailLevel");
+	//ShaderUniform detailLevelUniform = new ShaderUniform(this, EnumShaderData.INT, "detailLevel");
 	ShaderUniform windowSizeUniform = new ShaderUniform(this, EnumShaderData.FLOAT, "windowSize");
 	
 	@Override
 	public void setParameters() {
 		depthMapUniform.set(binding);
 		depthMapUniform.use();
-		detailLevelUniform.set(detailLevel);
-		detailLevelUniform.use();
 		windowSizeUniform.set(windowSize);
 		windowSizeUniform.use();
 	}	

@@ -6,6 +6,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
 import net.aegistudio.transparent.fbo.EnumBufferAttachment;
+import net.aegistudio.transparent.fbo.FrameBufferObject;
 import net.aegistudio.transparent.fbo.RenderTexture;
 import net.aegistudio.transparent.image.EnumPixelFormat;
 import net.aegistudio.transparent.mvp.Matrix;
@@ -21,6 +22,7 @@ import net.aegistudio.transparentx.ShaderResource;
 import net.aegistudio.transparentx.ShaderUniform;
 
 public abstract class DirectionShadow implements ShaderEffect, ComplexEffect {
+	protected final FrameBufferObject fbo;
 	protected final RenderTexture renderTexture;
 	protected final TextureBinding binding;
 	protected final int lightTarget;
@@ -28,9 +30,11 @@ public abstract class DirectionShadow implements ShaderEffect, ComplexEffect {
 	public DirectionShadow(int targetLightSource, int shadowDetailLevel) {
 		shadowClass = new Shadow(Shadow.DIRECTIONAL, targetLightSource);
 		lightTarget = targetLightSource;
-		
+		fbo = new FrameBufferObject(0, 0, shadowDetailLevel, shadowDetailLevel);
 		renderTexture = new RenderTexture(shadowDetailLevel, shadowDetailLevel, 
-					EnumPixelFormat.BYTE_DEPTH, EnumBufferAttachment.DEPTH);
+					EnumPixelFormat.BYTE_DEPTH);
+		fbo.attach(EnumBufferAttachment.DEPTH, renderTexture);
+		
 		this.binding = new StackedBinding(renderTexture, false);
 		shadowMap.set(binding);
 		
@@ -88,6 +92,7 @@ public abstract class DirectionShadow implements ShaderEffect, ComplexEffect {
 	@Override
 	public void create() {
 		renderTexture.create();
+		fbo.create();
 	}
 	
 	ShaderUniform regulation = new ShaderUniform(this, EnumShaderData.FLOAT, "regulation");
@@ -210,7 +215,7 @@ public abstract class DirectionShadow implements ShaderEffect, ComplexEffect {
 				if(lightSpaceVertices[2] < zmin) zmin = lightSpaceVertices[2];
 			}
 			
-			renderTexture.push();
+			fbo.push();
 			/* subrendering(shadowTexture) */ {
 				GL11.glEnable(GL11.GL_DEPTH_TEST);
 				GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
@@ -228,7 +233,7 @@ public abstract class DirectionShadow implements ShaderEffect, ComplexEffect {
 				GL11.glMatrixMode(GL11.GL_PROJECTION);
 				GL11.glPopMatrix();
 			}
-			renderTexture.pop();
+			fbo.pop();
 	
 			binding.use();
 		}
@@ -242,6 +247,7 @@ public abstract class DirectionShadow implements ShaderEffect, ComplexEffect {
 
 	@Override
 	public void destroy() {
+		fbo.destroy();
 		renderTexture.destroy();
 	}
 }
