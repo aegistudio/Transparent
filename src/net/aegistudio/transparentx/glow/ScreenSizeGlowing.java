@@ -11,7 +11,6 @@ import net.aegistudio.transparent.hint.EnumActivable;
 import net.aegistudio.transparent.image.EnumPixelFormat;
 import net.aegistudio.transparent.shader.EnumShaderData;
 import net.aegistudio.transparent.shader.EnumShaderType;
-import net.aegistudio.transparent.texture.ConstantBinding;
 import net.aegistudio.transparent.texture.EnumTexture;
 import net.aegistudio.transparent.texture.StackedBinding;
 import net.aegistudio.transparentx.ComplexEffect;
@@ -21,8 +20,24 @@ import net.aegistudio.transparentx.ShaderEffectClass;
 import net.aegistudio.transparentx.ShaderResource;
 import net.aegistudio.transparentx.ShaderUniform;
 
+/**
+ * A glow effect based on the glowing map rendered on the same perspective
+ * as the normal render process. 
+ * <br><br>
+ * 
+ * <b>Warning: </b>To make this effect work properly, this effect should be 
+ * inside super node of nodes that contain glow sub-effects. And only nodes
+ * that are under the super node could be influenced by this effect.
+ * 
+ * @author aegistudio
+ */
+
 public class ScreenSizeGlowing implements ShaderEffect, ComplexEffect {
 
+	/**
+	 * @param width 	The width of the glow map.
+	 * @param height	The height of the glow map.
+	 */
 	public ScreenSizeGlowing(int width, int height) {
 		fbo = new FrameBufferObject(0, 0, width, height);
 		
@@ -31,9 +46,10 @@ public class ScreenSizeGlowing implements ShaderEffect, ComplexEffect {
 		
 		depthBuffer = new RenderBuffer(EnumPixelFormat.BYTE_DEPTH, width, height);
 		fbo.attach(EnumBufferAttachment.DEPTH, depthBuffer);
-		
-		stubBinding = new ConstantBinding(glowingMap, 0);
 		glowingMapBinding = new StackedBinding(glowingMap, false);
+		
+		this.glowFormula(1.0f, 0.0f, 0.0f, 3.5f);
+		this.glowQuality(0.04f, 0.4f, 5);
 	}
 	
 	@Override
@@ -52,27 +68,85 @@ public class ScreenSizeGlowing implements ShaderEffect, ComplexEffect {
 	}
 	
 	ShaderUniform glowingMapUniform = new ShaderUniform(this, EnumShaderData.TEXTURE, "glowMapping");
-	
-	@Override
-	public void setParameters() {
-		glowingMapUniform.set(glowingMapBinding);
-		glowingMapUniform.use();
-	}
 
+	ShaderUniform zVectorUniform = new ShaderUniform(this, EnumShaderData.VEC4, "zVector");
+	
+	ShaderUniform radius = new ShaderUniform(this, EnumShaderData.FLOAT, "radius");
+	ShaderUniform sampleDirections = new ShaderUniform(this, EnumShaderData.FLOAT, "sampleDirections");
+	ShaderUniform amplification = new ShaderUniform(this, EnumShaderData.FLOAT, "amplification");
+
+	FrameBufferObject fbo;
+	RenderTexture glowingMap;
+	RenderBuffer depthBuffer;
+	StackedBinding glowingMapBinding;
+	
 	@Override
 	public void create() {
 		fbo.create();
 		glowingMap.create();
 		depthBuffer.create();
-		
-		stubBinding.create();
 		glowingMapBinding.create();
+		
+		zVectorUniform.create();
+		amplification.create();
+		radius.create();
+		sampleDirections.create();
 	}
-	FrameBufferObject fbo;
-	RenderTexture glowingMap;
-	RenderBuffer depthBuffer;
-	ConstantBinding stubBinding;
-	StackedBinding glowingMapBinding;
+	
+	@Override
+	public void destroy() {
+		glowingMap.destroy();
+		depthBuffer.destroy();
+		fbo.destroy();
+		glowingMapBinding.destroy();
+		
+		zVectorUniform.destroy();
+		amplification.destroy();
+		radius.destroy();
+		sampleDirections.destroy();
+	}
+	
+	@Override
+	public void setParameters() {
+		glowingMapUniform.set(glowingMapBinding);
+		glowingMapUniform.use();
+		
+		zVectorUniform.use();
+		amplification.use();
+		radius.use();
+		sampleDirections.use();
+	}
+	
+	/**
+	 * How will the glow attenuates as it goes farther from the glow body.
+	 * The formula is 1/(c0 * r + c1 * r + c2 * r^2) ^ exp. While r is the 
+	 * distance from the glow body. And the light value of a fragment pixel
+	 * will be $$\int(-d, d) \int(-d, d) form(x0 + x, y0 + y)
+	 *  * sample(x0 + x, y0 + y) dxdy$$, where form is the formula, and 
+	 *  sample is the light value on the glow map.
+	 */
+	
+	public void glowFormula(float c0, float c1, float c2, float exp) {
+		zVectorUniform.set(c0, c1, c2, exp);
+	}
+	
+	/**
+	 * Set the quality of the glow parameters. The radius affects the range of glow, 
+	 * the amplification affects the shininess of the glow, and direction affects the
+	 * precision of the glow.
+	 * 
+	 * @param radius the shining radium for all glows. The greater value, the wider range.
+	 * @param amplification the light value for glows. The greater value, the greater lightness.
+	 * @param direction how many samples should the gaussian kernel do with. 
+	 * 		The greater value, the preciser effect. 
+	 * 		Had better greater than 3, and 5 is default value.
+	 */
+	
+	public void glowQuality(float radius, float amplification, int direction) {
+		this.radius.set(radius);
+		this.amplification.set(amplification);
+		this.sampleDirections.set((float)direction);
+	}
 	
 	@Override
 	public void prerender(ComplexRender controller) throws Exception {
@@ -93,13 +167,5 @@ public class ScreenSizeGlowing implements ShaderEffect, ComplexEffect {
 	public void postrender(ComplexRender controller) throws Exception {
 		glowingMapBinding.recover();
 	}
-
-	@Override
-	public void destroy() {
-		glowingMap.destroy();
-		depthBuffer.destroy();
-		fbo.destroy();
-		stubBinding.destroy();
-		glowingMapBinding.destroy();
-	}
 }
+

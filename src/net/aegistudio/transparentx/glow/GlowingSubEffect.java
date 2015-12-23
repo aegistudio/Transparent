@@ -2,11 +2,13 @@ package net.aegistudio.transparentx.glow;
 
 import net.aegistudio.transparent.shader.EnumShaderType;
 import net.aegistudio.transparentx.ShaderEffect;
-import net.aegistudio.transparentx.ShaderEffectClass;
 
 public abstract class GlowingSubEffect implements ShaderEffect{
-	@Override
-	public abstract ShaderEffectClass getShaderEffectClass();
+	private final GlowingPreprocessor preprocessor;
+	
+	public GlowingSubEffect(GlowingPreprocessor preprocessor) {
+		this.preprocessor = preprocessor;
+	}
 
 	private boolean inStrip = false;
 	public void setGlowingStrip(boolean inStrip) {
@@ -21,6 +23,10 @@ public abstract class GlowingSubEffect implements ShaderEffect{
 	
 	public void setParameters() {
 		this.setGlowingParameter();
+	}
+	
+	public GlowingPreprocessor getShaderEffectClass() {
+		return this.preprocessor;
 	}
 	
 	public abstract String[] getGlowingRenderSource(EnumShaderType shaderType);

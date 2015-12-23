@@ -1,31 +1,18 @@
 package net.aegistudio.transparentx.glow;
 
+import net.aegistudio.transparent.hint.EnumBlendMethod;
 import net.aegistudio.transparent.shader.EnumShaderData;
 import net.aegistudio.transparent.shader.EnumShaderType;
-import net.aegistudio.transparentx.ShaderEffectClass;
 import net.aegistudio.transparentx.ShaderResource;
 import net.aegistudio.transparentx.ShaderUniform;
-import net.aegistudio.transparentx.combine.Combine;
-import net.aegistudio.transparentx.combine.ModifyReplaceOriginal;
-import net.aegistudio.transparentx.combine.NomodifyRedundant;
 
 public class BodyGlowColor extends GlowingSubEffect{
-
-	@Override
-	public ShaderEffectClass getShaderEffectClass() {
-		return new ShaderEffectClass() {
-			@Override
-			public double getPriority() {
-				return 8;
-			}
-
-			@Override
-			public Combine getCombine(String mutatedVariable) {
-				if(mutatedVariable.equals("_glowingMapColor")) return new ModifyReplaceOriginal();
-				else if(mutatedVariable.equals("gl_Position")) return new NomodifyRedundant(1);
-				else return null;
-			}
-		};
+	public BodyGlowColor() {
+		this(EnumBlendMethod.ACCUMULATE);
+	}
+	
+	public BodyGlowColor(EnumBlendMethod method) {
+		super(new GlowingPreprocessor(8, method));
 	}
 
 	ShaderResource body_glow_fsh = new ShaderResource("body_glow_color.fsh"){};
@@ -33,6 +20,10 @@ public class BodyGlowColor extends GlowingSubEffect{
 	ShaderUniform bodyGlowColor = new ShaderUniform(this, EnumShaderData.VEC4, "glowColor"); {
 		this.setBodyGlowColor(1, 1, 1);
 	}
+	
+	/**
+	 * Set the glow color of a glow body.
+	 */
 	
 	public void setBodyGlowColor(float r, float g, float b) {
 		bodyGlowColor.set(r, g, b, 1.0f);

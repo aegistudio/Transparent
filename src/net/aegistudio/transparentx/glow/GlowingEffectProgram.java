@@ -6,7 +6,11 @@ import java.util.Map;
 import net.aegistudio.transparent.shader.EnumShaderType;
 import net.aegistudio.transparentx.DefaultEffectProgram;
 import net.aegistudio.transparentx.ShaderEffect;
+import net.aegistudio.transparentx.ShaderEffectClass;
+import net.aegistudio.transparentx.light.Lighting;
 import net.aegistudio.transparentx.prog.SubprogramWorker;
+import net.aegistudio.transparentx.shadow.Shadow;
+
 public class GlowingEffectProgram extends DefaultEffectProgram {
 	public GlowingEffectProgram() {
 		super();
@@ -19,12 +23,18 @@ public class GlowingEffectProgram extends DefaultEffectProgram {
 	
 	boolean hasCompiledOnce = false;
 	public boolean adapt(ShaderEffect sfx) throws Exception {
-		if(!(sfx instanceof GlowingSubEffect)) return false;
-		
-		((GlowingSubEffect)sfx).setGlowingStrip(true);
-		boolean adapted = super.adapt(sfx);
-		((GlowingSubEffect)sfx).setGlowingStrip(false);
-		return adapted;
+		if(!(sfx instanceof GlowingSubEffect)) {
+			ShaderEffectClass shaderEffectClass = sfx.getShaderEffectClass();
+			if(shaderEffectClass instanceof Lighting) return false;
+			if(shaderEffectClass instanceof Shadow) return false;
+			return super.adapt(sfx);
+		}
+		else {
+			((GlowingSubEffect)sfx).setGlowingStrip(true);
+			boolean adapted = super.adapt(sfx);
+			((GlowingSubEffect)sfx).setGlowingStrip(false);
+			return adapted;
+		}
 	}
 	
 	public void create() {
@@ -39,7 +49,6 @@ public class GlowingEffectProgram extends DefaultEffectProgram {
 	
 	public String constructMainCode(EnumShaderType shaderType, Map<Double, List<SubprogramWorker>> subprogramMap) {
 		String main = super.constructMainCode(shaderType, subprogramMap);
-		System.out.println(main);
 		return main;
 	}
 }
